@@ -8,7 +8,8 @@ import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import scala.io.Source
 
 class MFDFA  {
-  private val timeSeriesWithSeqfile = "/tmp/addedSeqFile.csv"
+  private val timeSeriesWithSeqfile = "/tmp/addedSeqFileTmp.csv"
+  private val timeSeriesMFDFASeqfile = "/tmp/addedSeqFile.csv"
   var sparkSession:SparkSession = _
   var inputTimeSeries:Dataset[Row] = _
   var UniformTimeSeriesFile:String =_
@@ -21,9 +22,9 @@ class MFDFA  {
 
 
   private def readUniformDataFileAndAddSequence(): Unit = {
-    val bufferedSource = Source.fromFile(UniformTimeSeriesFile)
-    val outFileWriter = new File(timeSeriesWithSeqfile)
-    val bw = new BufferedWriter(new FileWriter(outFileWriter))
+    var bufferedSource = Source.fromFile(UniformTimeSeriesFile)
+    var outFileWriter = new File(timeSeriesWithSeqfile)
+    var bw = new BufferedWriter(new FileWriter(outFileWriter))
     var lineCounter:Int = 0
     var sumValues:Double =0
     for (line <- bufferedSource.getLines) {
@@ -34,7 +35,17 @@ class MFDFA  {
     bw.close()
     bufferedSource.close()
     val seriesMean = sumValues/lineCounter
-    println("Mean: "+seriesMean+" "+sumValues+" "+lineCounter)
+
+    bufferedSource = Source.fromFile(timeSeriesWithSeqfile)
+    outFileWriter = new File(timeSeriesWithSeqfile)
+    bw = new BufferedWriter(new FileWriter(outFileWriter))
+    for (line <- bufferedSource.getLines) {
+      val lineValues = line.trim.split(",")
+      val subtractMean = line(1).toDouble-seriesMean
+      bw.write(lineValues(1)+","+subtractMean+"\n")
+
+    }
+    //println("Mean: "+seriesMean+" "+sumValues+" "+lineCounter)
     println("Written temp file "+timeSeriesWithSeqfile)
   }
   private def readSeqFileIntoDataset(): Unit = {
