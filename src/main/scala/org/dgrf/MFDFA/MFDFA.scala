@@ -17,10 +17,14 @@ class MFDFA  {
     this()
     this.sparkSession = sparkSession
     this.UniformTimeSeriesFile = UniformTimeSeriesFile
+
+  }
+  def prepareCumulativeTimeSeries(): FQ = {
     readUniformDataFileAndAddSequence()
     readSeqFileIntoDataset()
+    val fq = new FQ (sparkSession,inputTimeSeries)
+    fq
   }
-
 
   private def readUniformDataFileAndAddSequence(): Unit = {
     var bufferedSource = Source.fromFile(UniformTimeSeriesFile)
@@ -33,10 +37,11 @@ class MFDFA  {
       bw.write(lineCounter+","+line+"\n")
       lineCounter = lineCounter+1
     }
+    MFDFAUtil.timeSeriesSize = lineCounter
     bw.close()
     bufferedSource.close()
     val seriesMean = sumValues/lineCounter
-    println("Series Mean "+seriesMean)
+
     bufferedSource = Source.fromFile(timeSeriesWithSeqfile)
     outFileWriter = new File(timeSeriesMFDFASeqfile)
     bw = new BufferedWriter(new FileWriter(outFileWriter))
@@ -53,7 +58,7 @@ class MFDFA  {
     bw.close()
     bufferedSource.close()
     //println("Mean: "+seriesMean+" "+sumValues+" "+lineCounter)
-    println("Written temp file "+timeSeriesMFDFASeqfile)
+
   }
   private def readSeqFileIntoDataset(): Unit = {
     val schema = StructType(Seq(
@@ -61,7 +66,7 @@ class MFDFA  {
       StructField("yval", DoubleType)
     ))
     val sqlContext = sparkSession.sqlContext
-    println(timeSeriesMFDFASeqfile)
+
     inputTimeSeries = sqlContext.read.schema(schema).option("delimiter",",").csv("file://"+timeSeriesMFDFASeqfile)
   }
 }

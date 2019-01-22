@@ -6,7 +6,7 @@ object MFDFAApp {
   def main(args: Array[String]): Unit = {
     val sparkSession = SparkSession.builder().appName("bheua").master("local").getOrCreate()
     val inputUniformfile = args(0)
-    val MFDFA = new MFDFA(sparkSession,inputUniformfile).inputTimeSeries.show(10)
+    val MFDFA = new MFDFA(sparkSession,inputUniformfile).prepareCumulativeTimeSeries().calculateFQ()
 
   }
 }
