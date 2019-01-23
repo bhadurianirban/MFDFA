@@ -2,7 +2,7 @@ package org.dgrf.MFDFA
 
 import java.io.{BufferedWriter, File, FileWriter}
 
-import org.apache.spark.sql.types.{DoubleType, LongType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 import scala.io.Source
@@ -62,7 +62,7 @@ class MFDFA  {
   }
   private def readSeqFileIntoDataset(): Unit = {
     val schema = StructType(Seq(
-      StructField("id", LongType),
+      StructField("id", IntegerType),
       StructField("yval", DoubleType)
     ))
     val sqlContext = sparkSession.sqlContext

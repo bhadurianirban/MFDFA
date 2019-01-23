@@ -25,7 +25,16 @@ object MFDFAUtil {
   }
 
   def getSliceStartEnd (sliceSize:Int):Array[(Int,Int)]= {
-    
+    val sliceCount = timeSeriesSize/sliceSize
+    val startEndIndexes:Array[(Int,Int)] = new Array[(Int, Int)](sliceCount)
+
+    for (sliceNumber<-0 to sliceCount-1) {
+      val startIndex = sliceSize*sliceNumber
+      val endIndex = startIndex + sliceSize-1
+      startEndIndexes(sliceNumber) = (startIndex,endIndex)
+    }
+
+    startEndIndexes
   }
 
 }
