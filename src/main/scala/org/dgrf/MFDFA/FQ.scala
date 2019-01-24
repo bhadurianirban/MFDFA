@@ -17,19 +17,22 @@ class FQ {
   }
   def calculateFQ (scaleMax:Double=1024,scaleMin:Double=16,scaleCount:Int=19): Unit = {
     val assembler = new VectorAssembler()
-      .setInputCols(Array("yval"))
+      .setInputCols(Array("xval"))
       .setOutputCol("features")
 
     val transformedSeries = assembler.transform(inputTimeSeries)
-    val gheuts = transformedSeries.select(transformedSeries("id").as("label"),transformedSeries("features"))
+    val gheuts = transformedSeries.select(transformedSeries("yval").as("label"),transformedSeries("features"))
     gheuts.show(10)
-    //transformed.show(10)
+    gheuts.printSchema()
+    //transformedSeries.show(10)
     val lr = new LinearRegression()
       .setMaxIter(10)
       .setRegParam(0.3)
       .setElasticNetParam(0.8)
 
     val lrModel = lr.fit(gheuts)
+    val pred = lrModel.transform(gheuts)
+    pred.show(20)
     val trainingSummary = lrModel.summary
     println("coef"+lrModel.coefficients+"inter"+lrModel.intercept)
     /*println(s"numIterations: ${trainingSummary.totalIterations}")
