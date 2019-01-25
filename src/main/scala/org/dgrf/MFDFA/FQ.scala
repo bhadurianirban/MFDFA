@@ -1,7 +1,7 @@
 package org.dgrf.MFDFA
 
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
@@ -17,7 +17,7 @@ class FQ {
   }
   def calculateFQ (scaleMax:Double=1024,scaleMin:Double=16,scaleCount:Int=19): Unit = {
     val assembler = new VectorAssembler()
-      .setInputCols(Array("xval"))
+      .setInputCols(Array("id"))
       .setOutputCol("features")
 
     val transformedSeries = assembler.transform(inputTimeSeries)
@@ -35,10 +35,11 @@ class FQ {
     pred.show(20)
     val trainingSummary = lrModel.summary
     println("coef"+lrModel.coefficients+"inter"+lrModel.intercept)
+
     /*println(s"numIterations: ${trainingSummary.totalIterations}")
     println(s"objectiveHistory: [${trainingSummary.objectiveHistory.mkString(",")}]")
-    trainingSummary.residuals.show()
-    println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
+    trainingSummary.residuals.show()*/
+    /*println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
     println(s"r2: ${trainingSummary.r2}")*/
 
 /*    val sliceList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
