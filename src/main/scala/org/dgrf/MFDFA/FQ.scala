@@ -8,8 +8,14 @@ import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.sql.types.{DoubleType, LongType}
 
 class FQ {
+  val lr = new LinearRegression()
+    .setMaxIter(10)
+    .setRegParam(0.3)
+    .setElasticNetParam(0.8)
   var sparkSession:SparkSession = _
   var inputTimeSeries:Dataset[Row] = _
+  var transformedSeries:Dataset[Row] = _
+
   def this (sparkSession:SparkSession,inputTimeSeries:Dataset[Row]) {
     this()
     this.sparkSession = sparkSession
@@ -20,40 +26,47 @@ class FQ {
       .setInputCols(Array("id"))
       .setOutputCol("features")
 
-    val transformedSeries = assembler.transform(inputTimeSeries)
-    val gheuts = transformedSeries.select(transformedSeries("yval").as("label"),transformedSeries("features"))
-    gheuts.show(10)
-    gheuts.printSchema()
+    transformedSeries = assembler.transform(inputTimeSeries)
+    transformedSeries = transformedSeries.select(transformedSeries("id"),transformedSeries("yval").as("label"),transformedSeries("features"))
+    //gheuts.show(10)
+    //gheuts.printSchema()
     //transformedSeries.show(10)
-    val lr = new LinearRegression()
-      .setMaxIter(10)
-      .setRegParam(0.3)
-      .setElasticNetParam(0.8)
 
-    val lrModel = lr.fit(gheuts)
-    val pred = lrModel.transform(gheuts)
-    pred.show(20)
+
+
+    //val pred = lrModel.transform(transformedSeries)
+    //pred.show(20)
+    //val trainingSummary = lrModel.summary
+    //println("coef"+lrModel.coefficients+"inter"+lrModel.intercept)
+
+    //    println(s"numIterations: ${trainingSummary.totalIterations}")
+    //    println(s"objectiveHistory: [${trainingSummary.objectiveHistory.mkString(",")}]")
+    //    trainingSummary.residuals.show()
+    //    println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
+    //    println(s"r2: ${trainingSummary.r2}")
+
+    val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
+    val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
+    scaleRMSArray.foreach(m => {
+      val scaleGheu = m
+      scaleGheu.foreach(gh=>println(gh._1+" "+gh._2))
+    })
+    //    val timeSeriesSlicedList = startEndIndexes.map(m => sliceTimeSeries(m))
+    //    timeSeriesSlicedList.foreach(m=>gheu(m))
+  }
+  def processForEachScale (scaleSize:Int): Array[(Int,Double)] = {
+    //println("scaleSize "+scaleSize)
+    val startEndIndexes = MFDFAUtil.getSliceStartEnd(scaleSize)
+    val rmsListOfSlice = startEndIndexes.map(m => sliceByScaleAndCalcRMS(m))
+    val scaleRMSArray = rmsListOfSlice.map(rms=>(scaleSize,rms))
+    scaleRMSArray
+  }
+  def sliceByScaleAndCalcRMS(startEndIndex:(Int,Int)): Double = {
+
+    val inputTimeSeriesSlice  = transformedSeries.select("*").where(transformedSeries("id") between (startEndIndex._1,startEndIndex._2) )
+    val lrModel = lr.fit(inputTimeSeriesSlice)
     val trainingSummary = lrModel.summary
-    println("coef"+lrModel.coefficients+"inter"+lrModel.intercept)
-
-    /*println(s"numIterations: ${trainingSummary.totalIterations}")
-    println(s"objectiveHistory: [${trainingSummary.objectiveHistory.mkString(",")}]")
-    trainingSummary.residuals.show()*/
-    /*println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
-    println(s"r2: ${trainingSummary.r2}")*/
-
-/*    val sliceList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
-    val startEndIndexes = MFDFAUtil.getSliceStartEnd(sliceList(18))
-    val timeSeriesSlicedList = startEndIndexes.map(m => sliceTimeSeries(m))
-    timeSeriesSlicedList.foreach(m=>gheu(m))*/
+    trainingSummary.rootMeanSquaredError
   }
-  def sliceTimeSeries(startEndIndex:(Int,Int)): Dataset[Row] = {
 
-    val inputTimeSeriesSlice  = inputTimeSeries.select("*").where(inputTimeSeries("id") >= startEndIndex._1)
-    inputTimeSeriesSlice
-  }
-  def gheu(timeSeriesSlice: Dataset[Row]): Unit = {
-
-    timeSeriesSlice.show(2)
-  }
 }
