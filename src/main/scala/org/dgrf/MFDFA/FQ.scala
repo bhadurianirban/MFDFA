@@ -1,11 +1,8 @@
 package org.dgrf.MFDFA
 
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
 import org.apache.spark.ml.regression.LinearRegression
-import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.sql.types.{DoubleType, LongType}
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 class FQ {
   val lr = new LinearRegression()
@@ -47,19 +44,18 @@ class FQ {
 
     val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
     val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
-    scaleRMSArray.foreach(m => {
-      val scaleGheu = m
-      scaleGheu.foreach(gh=>println(gh._1+" "+gh._2))
-    })
+    scaleRMSArray.foreach(m=>println(m._1,m._2))
+
     //    val timeSeriesSlicedList = startEndIndexes.map(m => sliceTimeSeries(m))
     //    timeSeriesSlicedList.foreach(m=>gheu(m))
   }
-  def processForEachScale (scaleSize:Int): Array[(Int,Double)] = {
+  def processForEachScale (scaleSize:Int): (Int,Double) = {
     //println("scaleSize "+scaleSize)
     val startEndIndexes = MFDFAUtil.getSliceStartEnd(scaleSize)
     val rmsListOfSlice = startEndIndexes.map(m => sliceByScaleAndCalcRMS(m))
-    val scaleRMSArray = rmsListOfSlice.map(rms=>(scaleSize,rms))
-    scaleRMSArray
+    val scaleRMS = math.sqrt(rmsListOfSlice.map(math.pow(_, 2)).sum / rmsListOfSlice.size)
+    (scaleSize,scaleRMS)
+    //scaleRMSArray
   }
   def sliceByScaleAndCalcRMS(startEndIndex:(Int,Int)): Double = {
 
