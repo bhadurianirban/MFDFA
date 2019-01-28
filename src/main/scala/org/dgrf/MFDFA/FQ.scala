@@ -3,6 +3,8 @@ package org.dgrf.MFDFA
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.commons.math3.stat.regression.SimpleRegression
+import scala.math.log
 
 class FQ {
   val lr = new LinearRegression()
@@ -25,37 +27,23 @@ class FQ {
 
     transformedSeries = assembler.transform(inputTimeSeries)
     transformedSeries = transformedSeries.select(transformedSeries("id"),transformedSeries("yval").as("label"),transformedSeries("features"))
-    //gheuts.show(10)
-    //gheuts.printSchema()
-    //transformedSeries.show(10)
 
-
-
-    //val pred = lrModel.transform(transformedSeries)
-    //pred.show(20)
-    //val trainingSummary = lrModel.summary
-    //println("coef"+lrModel.coefficients+"inter"+lrModel.intercept)
-
-    //    println(s"numIterations: ${trainingSummary.totalIterations}")
-    //    println(s"objectiveHistory: [${trainingSummary.objectiveHistory.mkString(",")}]")
-    //    trainingSummary.residuals.show()
-    //    println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
-    //    println(s"r2: ${trainingSummary.r2}")
 
     val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
     val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
-    scaleRMSArray.foreach(m=>println(m._1,m._2))
 
-    //    val timeSeriesSlicedList = startEndIndexes.map(m => sliceTimeSeries(m))
-    //    timeSeriesSlicedList.foreach(m=>gheu(m))
+    val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
+    scaleRMSArray.foreach(m=>regset.addData(m._1,m._2))
+    println("Hurst "+regset.getSlope+" "+ regset.getIntercept)
+
   }
-  def processForEachScale (scaleSize:Int): (Int,Double) = {
-    //println("scaleSize "+scaleSize)
+  def processForEachScale (scaleSize:Int): (Double,Double) = {
+
     val startEndIndexes = MFDFAUtil.getSliceStartEnd(scaleSize)
     val rmsListOfSlice = startEndIndexes.map(m => sliceByScaleAndCalcRMS(m))
     val scaleRMS = math.sqrt(rmsListOfSlice.map(math.pow(_, 2)).sum / rmsListOfSlice.size)
-    (scaleSize,scaleRMS)
-    //scaleRMSArray
+    (log(scaleSize) / log(MFDFAUtil.logBase),log(scaleRMS)/(log(MFDFAUtil.logBase)))
+
   }
   def sliceByScaleAndCalcRMS(startEndIndex:(Int,Int)): Double = {
 

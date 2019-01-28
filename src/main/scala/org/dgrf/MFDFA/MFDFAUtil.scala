@@ -4,6 +4,7 @@ import scala.math.ceil
 object MFDFAUtil {
   var logBase:Double = 2
   var timeSeriesSize = 0
+  var includeIntercept = true
   def sliceUtil (scaleMax:Double,scaleMin:Double,scaleCount:Int): Array[Int] = {
     val exponentMin = logXBaseK(scaleMin)
     val exponentMax = logXBaseK(scaleMax)
