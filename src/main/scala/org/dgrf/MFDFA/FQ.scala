@@ -14,11 +14,13 @@ class FQ {
   var sparkSession:SparkSession = _
   var inputTimeSeries:Dataset[Row] = _
   var transformedSeries:Dataset[Row] = _
+  var linspace:List[Double] = _
 
   def this (sparkSession:SparkSession,inputTimeSeries:Dataset[Row]) {
     this()
     this.sparkSession = sparkSession
     this.inputTimeSeries = inputTimeSeries
+    this.linspace = MFDFAUtil.qLinSpace(-5.0,5.0,101)
   }
   def calculateFQ (scaleMax:Double=1024,scaleMin:Double=16,scaleCount:Int=19): Unit = {
     val assembler = new VectorAssembler()
@@ -30,8 +32,9 @@ class FQ {
 
 
     val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
-    val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
-    scaleRMSArray.foreach(println)
+    //val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
+    //scaleRMSArray.foreach(println)
+    processForEachScale(1024)
     //val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
     //scaleRMSArray.foreach(m=>regset.addData(m._1,m._2))
     //println("Hurst "+regset.getSlope+" "+ regset.getIntercept)
@@ -41,6 +44,9 @@ class FQ {
 
     val startEndIndexes = MFDFAUtil.getSliceStartEnd(scaleSize)
     val rmsListOfSlice = startEndIndexes.map(m => sliceByScaleAndCalcRMS(m))
+
+    rmsListOfSlice.foreach(println)
+    linspace.foreach(println)
     val scaleRMS = math.sqrt(rmsListOfSlice.map(math.pow(_, 2)).sum / rmsListOfSlice.size)
     (scaleSize.toDouble,scaleRMS)
     //(log(scaleSize) / log(MFDFAUtil.logBase),log(scaleRMS)/(log(MFDFAUtil.logBase)))
