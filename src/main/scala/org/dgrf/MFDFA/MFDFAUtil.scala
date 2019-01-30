@@ -1,6 +1,7 @@
 package org.dgrf.MFDFA
 import scala.math.log
-import scala.math.ceil
+import scala.math.BigDecimal
+import scala.math.BigDecimal.RoundingMode
 object MFDFAUtil {
   var logBase:Double = 2
   var timeSeriesSize = 0
@@ -16,6 +17,24 @@ object MFDFAUtil {
     for (i<-0 to lineSpace.length-1) {
       lineSpace(i) = Math.pow(2, linValue).round.toInt
       linValue = linValue + step
+
+    }
+    lineSpace
+  }
+  def qLinSpace (start:Double,end:Double,scaleCount:Int): Array[Double]= {
+    val lineSpace:Array[Double] = new Array[Double](scaleCount)
+    val bigStart = BigDecimal(start)
+    val bigEnd = BigDecimal(end)
+    val bigDivision = BigDecimal(scaleCount - 1)
+    val bigStep = ((bigEnd-bigStart)/(bigDivision)).setScale(16,RoundingMode.HALF_UP)
+    //Double step = (end - start)/(totalCount-1);
+    var linValue = bigStart
+
+
+
+    for (i<-0 to lineSpace.length-1) {
+      lineSpace(i) = linValue.doubleValue()
+      linValue = linValue + bigStep
 
     }
     lineSpace
