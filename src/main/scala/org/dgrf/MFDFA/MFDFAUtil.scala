@@ -21,8 +21,8 @@ object MFDFAUtil {
     }
     lineSpace
   }
-  def qLinSpace (start:Double,end:Double,scaleCount:Int): Seq[Double] = {
-    val lineSpace = List[Double]
+  def qLinSpace (start:Double,end:Double,scaleCount:Int): List[Double] = {
+    val lineSpace:Array[Double] = new Array[Double](scaleCount)
     val bigStart = BigDecimal(start)
     val bigEnd = BigDecimal(end)
     val bigDivision = BigDecimal(scaleCount - 1)
@@ -32,13 +32,13 @@ object MFDFAUtil {
 
 
 
-    for (i<-0 to scaleCount-1) {
+    for (i<-0 to lineSpace.length-1) {
 
       lineSpace(i) = linValue.doubleValue()
       linValue = linValue + bigStep
 
     }
-    lineSpace
+    lineSpace.toList
   }
   def logXBaseK (x:Double): Double ={
     val logResult = log(x)/log(logBase)
