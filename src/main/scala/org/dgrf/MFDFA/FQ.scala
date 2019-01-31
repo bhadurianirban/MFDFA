@@ -14,13 +14,13 @@ class FQ {
   var sparkSession:SparkSession = _
   var inputTimeSeries:Dataset[Row] = _
   var transformedSeries:Dataset[Row] = _
-  var linspace:List[Double] = _
+  var qValues:List[Double] = _
 
   def this (sparkSession:SparkSession,inputTimeSeries:Dataset[Row]) {
     this()
     this.sparkSession = sparkSession
     this.inputTimeSeries = inputTimeSeries
-    this.linspace = MFDFAUtil.qLinSpace(-5.0,5.0,101)
+    this.qValues = MFDFAUtil.qLinSpace(-5.0,5.0,101)
   }
   def calculateFQ (scaleMax:Double=1024,scaleMin:Double=16,scaleCount:Int=19): Unit = {
     val assembler = new VectorAssembler()
@@ -45,12 +45,36 @@ class FQ {
     val startEndIndexes = MFDFAUtil.getSliceStartEnd(scaleSize)
     val rmsListOfSlice = startEndIndexes.map(m => sliceByScaleAndCalcRMS(m))
 
-    rmsListOfSlice.foreach(println)
-    linspace.foreach(println)
+    //rmsListOfSlice.foreach(println)
+    //qValues.foreach(println)
+    qValues.foreach(qValue=>calcqRMS(qValue,rmsListOfSlice))
     val scaleRMS = math.sqrt(rmsListOfSlice.map(math.pow(_, 2)).sum / rmsListOfSlice.size)
     (scaleSize.toDouble,scaleRMS)
     //(log(scaleSize) / log(MFDFAUtil.logBase),log(scaleRMS)/(log(MFDFAUtil.logBase)))
 
+  }
+  def calcqRMS (qValue:Double,rmsListOfSlice:Array[Double]): Unit = {
+    val qPoweredRMSList = rmsListOfSlice.map(rms=>calcqPoweredValue(rms,qValue))
+    println(qValue)
+    qPoweredRMSList.foreach(x=>print(x+","))
+    println()
+  }
+  def calcqPoweredValue (rms:Double,qValue:Double): Double = {
+    var qPoweredRMS = 0.0
+    if (qValue == 0) {
+      if (rms == 0) {
+        qPoweredRMS = 0.0
+      } else {
+        qPoweredRMS = Math.log(Math.pow(rms,2))
+      }
+    } else {
+      if (rms == 0) {
+        qPoweredRMS = 0.0
+      } else {
+        qPoweredRMS = Math.pow(rms,qValue)
+      }
+    }
+    qPoweredRMS
   }
   def sliceByScaleAndCalcRMS(startEndIndex:(Int,Int)): Double = {
 
