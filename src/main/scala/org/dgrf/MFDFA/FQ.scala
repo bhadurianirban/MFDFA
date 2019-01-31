@@ -3,10 +3,12 @@ package org.dgrf.MFDFA
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import org.apache.commons.math3.stat.regression.SimpleRegression
-import scala.math.log
+import org.dgrf.MFDFA.MFDFAImplicits._
+
+
 
 class FQ {
+
   val lr = new LinearRegression()
     .setMaxIter(10)
     .setRegParam(0.3)
@@ -32,6 +34,7 @@ class FQ {
 
 
     val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
+
     //val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
     //scaleRMSArray.foreach(println)
     processForEachScale(1024)
@@ -54,10 +57,15 @@ class FQ {
 
   }
   def calcqRMS (qValue:Double,rmsListOfSlice:Array[Double]): Unit = {
-    val qPoweredRMSList = rmsListOfSlice.map(rms=>calcqPoweredValue(rms,qValue))
-    println(qValue)
-    qPoweredRMSList.foreach(x=>print(x+","))
-    println()
+    val meanQPoweredRMS = rmsListOfSlice.map(rms=>calcqPoweredValue(rms,qValue)).meancalc
+    var qRMS=0.0
+    if (qValue == 0) {
+      qRMS = Math.exp(0.5 * meanQPoweredRMS)
+    } else {
+      qRMS = Math.pow(meanQPoweredRMS, 1 / qValue)
+    }
+    println(meanQPoweredRMS)
+
   }
   def calcqPoweredValue (rms:Double,qValue:Double): Double = {
     var qPoweredRMS = 0.0
