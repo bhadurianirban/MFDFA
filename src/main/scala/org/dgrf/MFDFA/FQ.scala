@@ -1,10 +1,11 @@
 package org.dgrf.MFDFA
 
+import org.apache.commons.math3.stat.regression.SimpleRegression
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.dgrf.MFDFA.MFDFAImplicits._
-
+import scala.math.log
 
 
 class FQ {
@@ -30,33 +31,36 @@ class FQ {
       .setOutputCol("features")
 
     transformedSeries = assembler.transform(inputTimeSeries)
+    transformedSeries.persist()
     transformedSeries = transformedSeries.select(transformedSeries("id"),transformedSeries("yval").as("label"),transformedSeries("features"))
 
 
     val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
 
-    //val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
+    val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
+    //scaleRMSArray(0)._3.foreach(println)
     //scaleRMSArray.foreach(println)
-    processForEachScale(1024)
-    //val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
+    //processForEachScale(1024)
+    val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
+    scaleRMSArray.foreach(m=>println(m._1,m._2))
     //scaleRMSArray.foreach(m=>regset.addData(m._1,m._2))
     //println("Hurst "+regset.getSlope+" "+ regset.getIntercept)
 
   }
-  def processForEachScale (scaleSize:Int): (Double,Double) = {
+  def processForEachScale (scaleSize:Int): (Double,Double,List[Double]) = {
 
     val startEndIndexes = MFDFAUtil.getSliceStartEnd(scaleSize)
     val rmsListOfSlice = startEndIndexes.map(m => sliceByScaleAndCalcRMS(m))
 
     //rmsListOfSlice.foreach(println)
     //qValues.foreach(println)
-    qValues.foreach(qValue=>calcqRMS(qValue,rmsListOfSlice))
+    val qRMSresults = qValues.map(qValue=>calcqRMS(qValue,rmsListOfSlice))
     val scaleRMS = math.sqrt(rmsListOfSlice.map(math.pow(_, 2)).sum / rmsListOfSlice.size)
-    (scaleSize.toDouble,scaleRMS)
-    //(log(scaleSize) / log(MFDFAUtil.logBase),log(scaleRMS)/(log(MFDFAUtil.logBase)))
+    //(scaleSize.toDouble,scaleRMS,qRMSresults)
+    (log(scaleSize) / log(MFDFAUtil.logBase),log(scaleRMS)/(log(MFDFAUtil.logBase)),qRMSresults)
 
   }
-  def calcqRMS (qValue:Double,rmsListOfSlice:Array[Double]): Unit = {
+  def calcqRMS (qValue:Double,rmsListOfSlice:Array[Double]): Double = {
     val meanQPoweredRMS = rmsListOfSlice.map(rms=>calcqPoweredValue(rms,qValue)).meancalc
     var qRMS=0.0
     if (qValue == 0) {
@@ -64,7 +68,7 @@ class FQ {
     } else {
       qRMS = Math.pow(meanQPoweredRMS, 1 / qValue)
     }
-    println(meanQPoweredRMS)
+    qRMS
 
   }
   def calcqPoweredValue (rms:Double,qValue:Double): Double = {
