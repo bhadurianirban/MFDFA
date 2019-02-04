@@ -38,13 +38,14 @@ class FQ {
     val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
 
     val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
+    val husrtExpt = scaleRMSArray.map(m=>(m._1,m._2)).regressionCalc
     //scaleRMSArray(0)._3.foreach(println)
     //scaleRMSArray.foreach(println)
     //processForEachScale(1024)
-    val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
-    scaleRMSArray.foreach(m=>println(m._1,m._2))
-    //scaleRMSArray.foreach(m=>regset.addData(m._1,m._2))
-    //println("Hurst "+regset.getSlope+" "+ regset.getIntercept)
+    /*val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
+
+    scaleRMSArray.foreach(m=>regset.addData(m._1,m._2))*/
+    println("Hurst "+husrtExpt._1+" "+ husrtExpt._2)
 
   }
   def processForEachScale (scaleSize:Int): (Double,Double,List[Double]) = {
