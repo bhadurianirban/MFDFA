@@ -10,7 +10,7 @@ object MFDFAImplicits {
     def meancalc: Double = values.sum / values.length
 
   }
-  implicit class ImplLinearReg (xyseries:Array[(Double,Double)]) {
+  implicit class ImplLinearReg (xyseries:List[(Double,Double)]) {
     def regressionCalc :(Double,Double) = {
       val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
 
