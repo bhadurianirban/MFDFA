@@ -2,6 +2,8 @@ package org.dgrf.MFDFA
 
 import org.apache.commons.math3.stat.regression.SimpleRegression
 
+import scala.math.log
+
 object MFDFAImplicits {
   implicit class ImplDoubleVecUtils(values: Array[Double]) {
 
@@ -12,7 +14,11 @@ object MFDFAImplicits {
     def regressionCalc :(Double,Double) = {
       val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
 
-      xyseries.foreach(m=>regset.addData(m._1,m._2))
+      xyseries.foreach(m=>{
+        val x=  log(m._1) / log(MFDFAUtil.logBase)
+        val y = log(m._2) / log(MFDFAUtil.logBase)
+        regset.addData(x,y)
+      })
       (regset.getSlope, regset.getIntercept)
     }
   }

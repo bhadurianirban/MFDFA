@@ -6,6 +6,8 @@ object MFDFAUtil {
   var logBase:Double = 2
   var timeSeriesSize = 0
   var includeIntercept = true
+  var linspaceStep = 0.0
+  var qValues:List[Double] = _
   def sliceUtil (scaleMax:Double,scaleMin:Double,scaleCount:Int): Array[Int] = {
     val exponentMin = logXBaseK(scaleMin)
     val exponentMax = logXBaseK(scaleMax)
@@ -21,13 +23,13 @@ object MFDFAUtil {
     }
     lineSpace
   }
-  def qLinSpace (start:Double,end:Double,scaleCount:Int): List[Double] = {
+  def qLinSpace (start:Double,end:Double,scaleCount:Int): Unit = {
     val lineSpace:Array[Double] = new Array[Double](scaleCount)
     val bigStart = BigDecimal(start)
     val bigEnd = BigDecimal(end)
     val bigDivision = BigDecimal(scaleCount - 1)
     val bigStep = ((bigEnd-bigStart)/(bigDivision)).setScale(16,RoundingMode.HALF_UP)
-    //Double step = (end - start)/(totalCount-1);
+    linspaceStep = bigStep.doubleValue()
     var linValue = bigStart
 
 
@@ -38,7 +40,8 @@ object MFDFAUtil {
       linValue = linValue + bigStep
 
     }
-    lineSpace.toList
+
+    qValues = lineSpace.toList
   }
   def logXBaseK (x:Double): Double ={
     val logResult = log(x)/log(logBase)

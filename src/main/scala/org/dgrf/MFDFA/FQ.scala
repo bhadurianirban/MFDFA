@@ -17,13 +17,13 @@ class FQ {
   var sparkSession:SparkSession = _
   var inputTimeSeries:Dataset[Row] = _
   var transformedSeries:Dataset[Row] = _
-  var qValues:List[Double] = _
+
 
   def this (sparkSession:SparkSession,inputTimeSeries:Dataset[Row]) {
     this()
     this.sparkSession = sparkSession
     this.inputTimeSeries = inputTimeSeries
-    this.qValues = MFDFAUtil.qLinSpace(-5.0,5.0,101)
+
   }
   def calculateFQ (scaleMax:Double=1024,scaleMin:Double=16,scaleCount:Int=19): Unit = {
     val assembler = new VectorAssembler()
@@ -55,10 +55,10 @@ class FQ {
 
     //rmsListOfSlice.foreach(println)
     //qValues.foreach(println)
-    val qRMSresults = qValues.map(qValue=>calcqRMS(qValue,rmsListOfSlice))
-    val scaleRMS = math.sqrt(rmsListOfSlice.map(math.pow(_, 2)).sum / rmsListOfSlice.size)
+    val qOrderRMSValues = MFDFAUtil.qValues.map(qValue=>calcqRMS(qValue,rmsListOfSlice))
+    val secondOrderRMS = math.sqrt(rmsListOfSlice.map(math.pow(_, 2)).sum / rmsListOfSlice.size)
     //(scaleSize.toDouble,scaleRMS,qRMSresults)
-    (log(scaleSize) / log(MFDFAUtil.logBase),log(scaleRMS)/(log(MFDFAUtil.logBase)),qRMSresults)
+    (scaleSize ,secondOrderRMS ,qOrderRMSValues)
 
   }
   def calcqRMS (qValue:Double,rmsListOfSlice:Array[Double]): Double = {
