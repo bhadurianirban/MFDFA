@@ -35,10 +35,10 @@ class FQ {
     transformedSeries = transformedSeries.select(transformedSeries("id"),transformedSeries("yval").as("label"),transformedSeries("features"))
 
 
-    val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
+    //val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
 
-    val scaleRMSArray = scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
-    val husrtExpt = scaleRMSArray.map(m=>(m._1,m._2)).toList.regressionCalc
+    val scaleRMSArray = MFDFAUtil.scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
+    val husrtExpt = scaleRMSArray.map(m=>(m._1,m._2)).regressionCalc
     //scaleRMSArray(0)._3.foreach(println)
     //scaleRMSArray.foreach(println)
     //processForEachScale(1024)

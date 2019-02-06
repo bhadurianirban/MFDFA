@@ -8,7 +8,9 @@ object MFDFAApp {
     val inputUniformfile = args(0)
     val MFDFA = new MFDFA(sparkSession,inputUniformfile).prepareCumulativeTimeSeries().calculateFQ()
 
-//    val linspace = MFDFAUtil.qLinSpace(-5.0,5.0,101)
-//    linspace.foreach(println)
+    /* MFDFAUtil.qLinSpace()
+    MFDFAUtil.qValues.foreach(println)
+    MFDFAUtil.sliceUtil()
+    MFDFAUtil.scaleSizeList.foreach(println)*/
   }
 }

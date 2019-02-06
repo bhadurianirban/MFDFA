@@ -17,7 +17,8 @@ class MFDFA  {
     this()
     this.sparkSession = sparkSession
     this.UniformTimeSeriesFile = UniformTimeSeriesFile
-    MFDFAUtil.qLinSpace(-5.0,5.0,101)
+    MFDFAUtil.qLinSpace()
+    MFDFAUtil.sliceUtil()
   }
   def prepareCumulativeTimeSeries(): FQ = {
     readUniformDataFileAndAddSequence()

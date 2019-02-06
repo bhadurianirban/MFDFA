@@ -6,30 +6,34 @@ object MFDFAUtil {
   var logBase:Double = 2
   var timeSeriesSize = 0
   var includeIntercept = true
-  var linspaceStep = 0.0
+  var qlinSpaceStep = 0.0
   var qValues:List[Double] = _
-  def sliceUtil (scaleMax:Double,scaleMin:Double,scaleCount:Int): Array[Int] = {
+  var qLinSpaceStart:Double = -5.0
+  var qLinSpaceEnd:Double = 5.0
+  var qLinSpaceParitions:Int = 101
+  var scaleMin:Double = 16
+  var scaleMax:Double = 1024
+  var scaleCount:Int = 19
+  var scaleSizeList:List[Int] = _
+  def sliceUtil ():Unit = {
     val exponentMin = logXBaseK(scaleMin)
     val exponentMax = logXBaseK(scaleMax)
+    val sliceLinSpace = linSpace(exponentMin,exponentMax,scaleCount)
+    //var scaleSizeArray = Array[Int](scaleCount)
+    val scaleSizeArray = sliceLinSpace._2.map(m=> {
+      val scaleSize = Math.pow(2, m).round.toInt
+      scaleSize
+    })
 
-    val lineSpace:Array[Int] = new Array[Int](scaleCount)
-    val step = (exponentMax - exponentMin)/(scaleCount-1)
-
-    var linValue = exponentMin
-    for (i<-0 to lineSpace.length-1) {
-      lineSpace(i) = Math.pow(2, linValue).round.toInt
-      linValue = linValue + step
-
-    }
-    lineSpace
+    scaleSizeList = scaleSizeArray
   }
-  def qLinSpace (start:Double,end:Double,scaleCount:Int): Unit = {
+  private def linSpace (start:Double,end:Double,scaleCount:Int):(Double, List[Double]) = {
     val lineSpace:Array[Double] = new Array[Double](scaleCount)
     val bigStart = BigDecimal(start)
     val bigEnd = BigDecimal(end)
     val bigDivision = BigDecimal(scaleCount - 1)
     val bigStep = ((bigEnd-bigStart)/(bigDivision)).setScale(16,RoundingMode.HALF_UP)
-    linspaceStep = bigStep.doubleValue()
+
     var linValue = bigStart
 
 
@@ -41,9 +45,14 @@ object MFDFAUtil {
 
     }
 
-    qValues = lineSpace.toList
+    (bigStep.doubleValue(),lineSpace.toList)
   }
-  def logXBaseK (x:Double): Double ={
+  def qLinSpace (): Unit = {
+    val qLinSpace = linSpace(qLinSpaceStart,qLinSpaceEnd,qLinSpaceParitions)
+    qValues = qLinSpace._2
+    qlinSpaceStep = qLinSpace._1
+  }
+  private def logXBaseK (x:Double): Double ={
     val logResult = log(x)/log(logBase)
     logResult
   }
