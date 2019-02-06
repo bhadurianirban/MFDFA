@@ -7,7 +7,7 @@ object MFDFAUtil {
   var timeSeriesSize = 0
   var includeIntercept = true
   var qlinSpaceStep = 0.0
-  var qValues:List[Double] = _
+  var qLinSpaceValues:List[Double] = _
   var qLinSpaceStart:Double = -5.0
   var qLinSpaceEnd:Double = 5.0
   var qLinSpaceParitions:Int = 101
@@ -49,7 +49,8 @@ object MFDFAUtil {
   }
   def qLinSpace (): Unit = {
     val qLinSpace = linSpace(qLinSpaceStart,qLinSpaceEnd,qLinSpaceParitions)
-    qValues = qLinSpace._2
+
+    qLinSpaceValues = qLinSpace._2
     qlinSpaceStep = qLinSpace._1
   }
   private def logXBaseK (x:Double): Double ={
