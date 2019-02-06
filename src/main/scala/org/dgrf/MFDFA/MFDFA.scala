@@ -13,17 +13,17 @@ class MFDFA  {
   var sparkSession:SparkSession = _
   var inputTimeSeries:Dataset[Row] = _
   var UniformTimeSeriesFile:String =_
-  def this (sparkSession:SparkSession,UniformTimeSeriesFile:String) {
+  def this (sparkSession:SparkSession) {
     this()
     this.sparkSession = sparkSession
-    this.UniformTimeSeriesFile = UniformTimeSeriesFile
-    MFDFAUtil.qLinSpace()
-    MFDFAUtil.sliceUtil()
+
+    LinearSpace.setupLinearSpace()
   }
-  def prepareCumulativeTimeSeries(): FQ = {
+  def readTimeSeries(UniformTimeSeriesFile:String): MFDFATimeSeries = {
+    this.UniformTimeSeriesFile = UniformTimeSeriesFile
     readUniformDataFileAndAddSequence()
     readSeqFileIntoDataset()
-    val fq = new FQ (sparkSession,inputTimeSeries)
+    val fq = new MFDFATimeSeries (sparkSession,inputTimeSeries)
     fq
   }
 

@@ -8,68 +8,64 @@ import org.dgrf.MFDFA.MFDFAImplicits._
 import scala.math.log
 
 
-class FQ {
+class MFDFATimeSeries {
 
   val lr = new LinearRegression()
     .setMaxIter(10)
     .setRegParam(0.3)
     .setElasticNetParam(0.8)
   var sparkSession:SparkSession = _
-  var inputTimeSeries:Dataset[Row] = _
-  var transformedSeries:Dataset[Row] = _
+  var MFDFATimeSeriesDataset:Dataset[Row] = _
+  private var transformedSeries:Dataset[Row] = _
 
 
   def this (sparkSession:SparkSession,inputTimeSeries:Dataset[Row]) {
     this()
     this.sparkSession = sparkSession
-    this.inputTimeSeries = inputTimeSeries
+    this.MFDFATimeSeriesDataset = inputTimeSeries
 
   }
-  def calculateFQ (scaleMax:Double=1024,scaleMin:Double=16,scaleCount:Int=19): Unit = {
+  def extractFluctuations(): DetrendedFluctuations = {
     val assembler = new VectorAssembler()
       .setInputCols(Array("id"))
       .setOutputCol("features")
 
-    transformedSeries = assembler.transform(inputTimeSeries)
+    transformedSeries = assembler.transform(MFDFATimeSeriesDataset)
     transformedSeries.persist()
     transformedSeries = transformedSeries.select(transformedSeries("id"),transformedSeries("yval").as("label"),transformedSeries("features"))
 
 
     //val scaleSizeList = MFDFAUtil.sliceUtil(scaleMax,scaleMin,scaleCount)
 
-    val scaleRMSArray = MFDFAUtil.scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
-    val husrtExpt = scaleRMSArray.map(m=>(m._1,m._2)).regressionCalc
-    //scaleRMSArray(0)._3.foreach(println)
-    //scaleRMSArray.foreach(println)
-    //processForEachScale(1024)
-    /*val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
+    var secondAndQOrderFluctuations = LinearSpace.scaleSizeList.map(scaleSize=>processForEachScale(scaleSize))
+    val DF = new DetrendedFluctuations(secondAndQOrderFluctuations)
+    DF
+    /*val husrtExpt = secondAndQOrderFluctuations.map(m=>(m.scaleSize,m.secondOrderRMS)).powerFit
 
-    scaleRMSArray.foreach(m=>regset.addData(m._1,m._2))*/
     println("Hurst "+husrtExpt._1+" "+ husrtExpt._2)
 
-    val scaleQRMSArray = scaleRMSArray.map(m=> m._3)
-    val scaleQRMSTr = MFDFAUtil.qLinSpaceValues zip scaleQRMSArray.transpose
+    val scaleQRMSArray = secondAndQOrderFluctuations.map(m=> m.qOrderRMSValues)
+    val scaleQRMSTr = LinearSpace.qLinSpaceValues zip scaleQRMSArray.transpose
     val tq = scaleQRMSTr.map(m=>gheu(m))
-    val hq = (tq zip tq.drop(1)).map({case (tqPrev,tqCurr)=>((tqCurr-tqPrev)/MFDFAUtil.qlinSpaceStep)})
-    hq.foreach(println)
+    val hq = (tq zip tq.drop(1)).map({case (tqPrev,tqCurr)=>((tqCurr-tqPrev)/LinearSpace.qlinSpaceStep)})
+    println("hq "+hq.length+"tq "+tq.length+"qLin "+LinearSpace.qLinSpaceValues.length)
+    val HqDq = (hq,tq.dropRight(1),LinearSpace.qLinSpaceValues.dropRight(1)).zipped.toList.map(m=>bheu(m))
+    HqDq.foreach(println)*/
+
   }
-  def gheu(Fq: (Double,List[Double])): Double = {
-    val Hq = (MFDFAUtil.scaleSizeList zip Fq._2).map(m=>(m._1.toDouble,m._2)).regressionCalc._1
-    val qLinSpaceValue = Fq._1
-    val tq = (Hq * qLinSpaceValue) -1
-    tq
-  }
-  def processForEachScale (scaleSize:Int): (Double,Double,List[Double]) = {
+
+  def processForEachScale (scaleSize:Int): SecondAndQOrderFluctuation = {
 
     val startEndIndexes = MFDFAUtil.getSliceStartEnd(scaleSize)
     val rmsListOfSlice = startEndIndexes.map(m => sliceByScaleAndCalcRMS(m))
 
     //rmsListOfSlice.foreach(println)
     //qValues.foreach(println)
-    val qOrderRMSValues = MFDFAUtil.qLinSpaceValues.map(qValue=>calcqRMS(qValue,rmsListOfSlice))
+    val qOrderRMSValues = LinearSpace.qLinSpaceValues.map(qValue=>calcqRMS(qValue,rmsListOfSlice))
     val secondOrderRMS = math.sqrt(rmsListOfSlice.map(math.pow(_, 2)).sum / rmsListOfSlice.size)
     //(scaleSize.toDouble,scaleRMS,qRMSresults)
-    (scaleSize ,secondOrderRMS ,qOrderRMSValues)
+    val secondAndQOrderFluctuation = SecondAndQOrderFluctuation(scaleSize ,secondOrderRMS ,qOrderRMSValues)
+    secondAndQOrderFluctuation
 
   }
   def calcqRMS (qValue:Double,rmsListOfSlice:Array[Double]): Double = {

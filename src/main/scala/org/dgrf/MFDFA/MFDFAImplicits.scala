@@ -11,7 +11,7 @@ object MFDFAImplicits {
 
   }
   implicit class ImplLinearReg (xyseries:List[(Double,Double)]) {
-    def regressionCalc :(Double,Double) = {
+    def powerFit :RegressionResults = {
       val regset = new SimpleRegression(MFDFAUtil.includeIntercept)
 
       xyseries.foreach(m=>{
@@ -19,7 +19,8 @@ object MFDFAImplicits {
         val y = log(m._2) / log(MFDFAUtil.logBase)
         regset.addData(x,y)
       })
-      (regset.getSlope, regset.getIntercept)
+      val regressionResults = RegressionResults(regset.getSlope,regset.getIntercept,regset.getRSquare,regset.getMeanSquareError)
+      regressionResults
     }
   }
 }
