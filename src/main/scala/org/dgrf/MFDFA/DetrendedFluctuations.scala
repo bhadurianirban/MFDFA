@@ -12,23 +12,23 @@ class DetrendedFluctuations {
     val secondOrderResults = SecondOrderResults(husrtExpt.slope,husrtExpt.SE,husrtExpt.RSquare)
     secondOrderResults
   }
-  def calculateQOrderResults(): Unit = {
+  def calculateQOrderResults(): List[(Double,Double)] = {
     val scaleQRMSArray = secondAndQOrderFluctuations.map(m=> m.qOrderRMSValues)
     val scaleQRMSTr = LinearSpace.qLinSpaceValues zip scaleQRMSArray.transpose
-    val tq = scaleQRMSTr.map(m=>gheu(m))
+    val tq = scaleQRMSTr.map(m=>tqCalc(m))
     val hq = (tq zip tq.drop(1)).map({case (tqPrev,tqCurr)=> (tqCurr-tqPrev)/LinearSpace.qlinSpaceStep })
-    println("hq "+hq.length+"tq "+tq.length+"qLin "+LinearSpace.qLinSpaceValues.length)
-    val HqDq = (hq,tq.dropRight(1),LinearSpace.qLinSpaceValues.dropRight(1)).zipped.toList.map(m=>bheu(m))
-    HqDq.foreach(println)
+
+    val mfSpectrumHqvsDq = (hq,tq.dropRight(1),LinearSpace.qLinSpaceValues.dropRight(1)).zipped.toList.map(m=>prepMFSpectrum(m))
+    mfSpectrumHqvsDq
   }
-  def bheu(hqtqlinspace: (Double, Double, Double)): (Double,Double )= {
+  private def prepMFSpectrum(hqtqlinspace: (Double, Double, Double)): (Double,Double )= {
     val hqValue = hqtqlinspace._1
     val tqValue = hqtqlinspace._2
     val qValue =  hqtqlinspace._3
     val Dq = (qValue * hqValue) - tqValue
     (hqValue,Dq)
   }
-  def gheu(Fq: (Double,List[Double])): Double = {
+  private def tqCalc (Fq: (Double,List[Double])): Double = {
     val Hq = (LinearSpace.scaleSizeList zip Fq._2).map(m=>(m._1.toDouble,m._2)).powerFit.slope
     val qLinSpaceValue = Fq._1
     val tq = (Hq * qLinSpaceValue) -1

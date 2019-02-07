@@ -7,7 +7,7 @@ object MFDFAApp {
     val sparkSession = SparkSession.builder().appName("bheua").master("local").getOrCreate()
     val inputUniformfile = args(0)
     val MFDFA = new MFDFA(sparkSession).readTimeSeries(inputUniformfile).extractFluctuations().calculateQOrderResults()
-
+    MFDFA.foreach(println)
     /* MFDFAUtil.qLinSpace()
     MFDFAUtil.qValues.foreach(println)
     MFDFAUtil.sliceUtil()
