@@ -1,6 +1,6 @@
 package org.dgrf.MFDFA
 
-case class SecondAndQOrderFluctuation (
+case class DFDataPoint(
                                         scaleSize:Double,
                                         secondOrderRMS:Double,
                                         qOrderRMSValues:List[Double]

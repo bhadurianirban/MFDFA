@@ -23,8 +23,8 @@ class MFDFA  {
     this.UniformTimeSeriesFile = UniformTimeSeriesFile
     readUniformDataFileAndAddSequence()
     readSeqFileIntoDataset()
-    val fq = new MFDFATimeSeries (sparkSession,inputTimeSeries)
-    fq
+    val mfdfaTimeSeries = new MFDFATimeSeries (sparkSession,inputTimeSeries)
+    mfdfaTimeSeries
   }
 
   private def readUniformDataFileAndAddSequence(): Unit = {
