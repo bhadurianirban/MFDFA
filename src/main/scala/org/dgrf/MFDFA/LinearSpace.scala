@@ -7,25 +7,22 @@ import scala.math.BigDecimal.RoundingMode
 
 object LinearSpace {
   //Linear space definication parameters
-  var qLinSpaceStart:Double = -5.0
-  var qLinSpaceEnd:Double = 5.0
-  var qLinSpaceParitions:Int = 101
-  var scaleMin:Double = 16
-  var scaleMax:Double = 1024
-  var scaleCount:Int = 19
+  var linspaceParams:LinspaceParams = _
   //Linear space results
   var qlinSpaceStep = 0.0
   var qLinSpaceValues:List[Double] = _
   var scaleSizeList:List[Int] = _
 
-  def setupLinearSpace(): Unit = {
+  def setupLinearSpace(linspaceParams:LinspaceParams = new LinspaceParams()): Unit = {
+    this.linspaceParams = linspaceParams
     sliceUtil()
     qLinSpace()
+    qLinSpaceValues.foreach(println)
   }
   private def sliceUtil ():Unit = {
-    val exponentMin = MFDFAUtil.logXBaseK(scaleMin)
-    val exponentMax = MFDFAUtil.logXBaseK(scaleMax)
-    val sliceLinSpace = linSpace(exponentMin,exponentMax,scaleCount)
+    val exponentMin = MFDFAUtil.logXBaseK(linspaceParams.scaleMin)
+    val exponentMax = MFDFAUtil.logXBaseK(linspaceParams.scaleMax)
+    val sliceLinSpace = linSpace(exponentMin,exponentMax,linspaceParams.scaleCount)
     //var scaleSizeArray = Array[Int](scaleCount)
     val scaleSizeArray = sliceLinSpace._2.map(m=> {
       val scaleSize = Math.pow(2, m).round.toInt
@@ -55,7 +52,7 @@ object LinearSpace {
     (bigStep.doubleValue(),lineSpace.toList)
   }
   private def qLinSpace (): Unit = {
-    val qLinSpace = linSpace(qLinSpaceStart,qLinSpaceEnd,qLinSpaceParitions)
+    val qLinSpace = linSpace(linspaceParams.qLinSpaceStart,linspaceParams.qLinSpaceEnd,linspaceParams.qLinSpaceParitions)
 
     qLinSpaceValues = qLinSpace._2
     qlinSpaceStep = qLinSpace._1

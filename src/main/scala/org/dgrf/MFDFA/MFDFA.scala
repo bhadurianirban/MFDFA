@@ -13,11 +13,11 @@ class MFDFA  {
   var sparkSession:SparkSession = _
   var inputTimeSeries:Dataset[Row] = _
   var UniformTimeSeriesFile:String =_
-  def this (sparkSession:SparkSession) {
+  def this (sparkSession:SparkSession,linspaceParams:LinspaceParams= new LinspaceParams() ) {
     this()
     this.sparkSession = sparkSession
 
-    LinearSpace.setupLinearSpace()
+    LinearSpace.setupLinearSpace(linspaceParams)
   }
   def readTimeSeries(UniformTimeSeriesFile:String): MFDFATimeSeries = {
     this.UniformTimeSeriesFile = UniformTimeSeriesFile
